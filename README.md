@@ -54,22 +54,6 @@ These basic indices provide the foundation for more complex analysis:
    - Algorithm: EVI = G × [(NIR - Red) / (NIR + C1 × Red - C2 × Blue + L)]
    - Description: Improved vegetation index with soil and atmospheric corrections
 
-3. **Normalized Difference Water Index (NDWI)**
-   - Algorithm: NDWI = (NIR - SWIR) / (NIR + SWIR) or (Green - NIR) / (Green + NIR)
-   - Description: Water content in vegetation or water bodies
-
-### Intermediate Metrics
-
-These build upon the foundational indices:
-
-4. **Normalized Difference Soil Index (NDSI)**
-   - Algorithm: NDSI = (SWIR - NIR) / (SWIR + NIR)
-   - Description: Soil exposure assessment
-
-5. **Vegetation Condition Index (VCI)**
-   - Algorithm: VCI = 100 × (NDVI - NDVImin) / (NDVImax - NDVImin)
-   - Description: Normalized vegetation vigor relative to historical data
-
 ### Primary Goal Metrics
 
 The core focus of the project:
@@ -86,28 +70,6 @@ The core focus of the project:
      - ML-based: Regression models using spectral data
    - Description: Quantifies leaf material in an ecosystem
    - Dependency: Often derived from NDVI or other vegetation indices
-
-### Advanced Composite Metrics
-
-These more complex indices can provide additional insights:
-
-8. **Vegetation Health Index (VHI)**
-   - Algorithm: VHI = α × VCI + (1-α) × TCI
-   - Description: Combined vegetation condition and temperature stress
-   - Dependency: Requires VCI and temperature data
-
-9. **Normalized Difference Built-up Index (NDBI)**
-   - Algorithm: NDBI = (SWIR - NIR) / (SWIR + NIR)
-   - Description: Urban area detection
-
-10. **Normalized Difference Urban Index (NDUI)**
-    - Algorithm: NDUI = (SWIR - NIR) / (SWIR + NIR + Red)
-    - Description: Refined urban feature detection
-
-11. **Normalized Difference Impervious Surface Index (NDISI)**
-    - Algorithm: NDISI = (TIR - [(MNDWI + NIR + MIR)/3]) / (TIR + [(MNDWI + NIR + MIR)/3])
-    - Description: Impervious surface identification
-    - Dependency: Requires thermal data and multiple other indices
 
 ## Implementation Strategy
 
