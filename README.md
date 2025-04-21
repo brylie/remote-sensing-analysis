@@ -1,6 +1,6 @@
-# Remote Observation Analysis
+# Remote Sensing Analysis
 
-Geospatial analysis of remote observation data focused on vegetation and moisture metrics.
+Geospatial analysis of remote sensing data focused on vegetation and moisture metrics.
 
 ## Project Goals
 
