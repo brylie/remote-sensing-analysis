@@ -5,5 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "marimo>=0.13.0",
+    "earthengine-api>=1.5.11",
+    "geemap>=0.35.3",
+    "jupyterlab>=4.4.0",
 ]
