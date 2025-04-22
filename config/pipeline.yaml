@@ -1,0 +1,32 @@
+# Remote Sensing Analysis Pipeline Configuration
+
+# Area of interest
+# Available values are defined in config/areas.py
+area: "finland"
+
+# Time range for data extraction
+start_date: "2024-04-01" # Format: YYYY-MM-DD
+end_date: "2024-04-30" # Format: YYYY-MM-DD
+
+# Metrics to calculate
+# Available metrics: EVI, LAI, MSI
+metrics:
+  - "EVI"
+  - "LAI"
+  - "MSI"
+
+# Cloud masking settings
+cloud_masking:
+  enabled: true
+  threshold: 20 # Maximum cloud percentage allowed
+
+# Output settings
+output:
+  format: "GeoTIFF"
+  directory: "data/output"
+  prefix: "rs_metrics_"
+
+# Advanced settings
+processing:
+  composite_method: "median" # Options: median, mean, mosaic
+  resampling: "bilinear" # Options: bilinear, nearest, cubic
