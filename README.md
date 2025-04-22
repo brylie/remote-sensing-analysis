@@ -8,6 +8,40 @@ The primary objectives of this project are to:
 - Derive or obtain Moisture Stress Index (MSI)
 - Derive or obtain Leaf Area Index (LAI)
 
+## Project Structure
+
+The project follows a modular structure to separate concerns and enable reusability:
+
+```
+remote-sensing-analysis/
+├── config/                # Configuration files
+│   ├── areas.py           # Geographic area definitions
+│   ├── pipeline.yaml      # Pipeline configuration
+│   └── settings.py        # General settings
+├── data/                  # Data storage
+│   ├── output/            # Generated output files
+│   ├── processed/         # Intermediate processed data
+│   └── raw/               # Raw input data
+├── docs/                  # Documentation
+│   └── research.md        # Research notes and methodology
+├── notebooks/             # Jupyter notebooks for analysis
+│   └── lai_finland.ipynb  # Finland LAI/MSI analysis example
+├── scripts/               # Executable scripts
+│   └── run_pipeline.py    # Main pipeline runner
+└── src/                   # Source code
+    ├── extractors/        # Data extraction modules
+    │   └── sentinel.py    # Sentinel imagery extraction
+    ├── metrics/           # Index calculation modules
+    │   ├── moisture.py    # Moisture metrics (MSI)
+    │   └── vegetation.py  # Vegetation metrics (EVI, LAI)
+    ├── pipeline/          # Pipeline components
+    │   └── runner.py      # Pipeline orchestration
+    ├── processors/        # Data processing modules
+    │   └── preprocessing.py # Common preprocessing functions
+    └── visualization/     # Visualization utilities
+        └── maps.py        # Map generation helpers
+```
+
 ## Data Sources
 
 ### LAI Data Sources (Pre-computed)
@@ -26,66 +60,141 @@ The primary objectives of this project are to:
 
 ### MSI Source Data
 
-Since pre-computed MSI is rarely available, we'll calculate it from:
+Since pre-computed MSI is rarely available, we calculate it from:
 
 1. **Sentinel-2 MSI**
    - Resolution: 10-20m (depending on bands)
    - Bands needed: NIR (B8) and SWIR (B11)
    - Source: Copernicus Open Access Hub or AWS Public Dataset
-   - Access: sentinelsat package or direct AWS S3 access
+   - Access: Google Earth Engine or AWS S3 access
 
 2. **Landsat 8/9 OLI**
    - Resolution: 30m
    - Bands needed: NIR (B5) and SWIR (B6)
    - Source: USGS EarthExplorer
-   - Access: landsatxplore package
+   - Access: Google Earth Engine or landsatxplore package
 
-## Metric Progression
+## Implemented Metrics
 
 ### Foundational Metrics
 
 These basic indices provide the foundation for more complex analysis:
 
-1. **Normalized Difference Vegetation Index (NDVI)**
-   - Algorithm: NDVI = (NIR - Red) / (NIR + Red)
-   - Description: Basic vegetation health and density
-
-2. **Enhanced Vegetation Index (EVI)**
-   - Algorithm: EVI = G × [(NIR - Red) / (NIR + C1 × Red - C2 × Blue + L)]
+1. **Enhanced Vegetation Index (EVI)**
+   - Algorithm: `EVI = 2.5 * ((NIR - RED) / (NIR + 6 * RED - 7.5 * BLUE + 1))`
    - Description: Improved vegetation index with soil and atmospheric corrections
+   - Implementation: `src/metrics/vegetation.py`
 
 ### Primary Goal Metrics
 
 The core focus of the project:
 
-6. **Moisture Stress Index (MSI)**
-   - Algorithm: MSI = NIR / SWIR
+1. **Moisture Stress Index (MSI)**
+   - Algorithm: `MSI = SWIR / NIR`
    - Description: Assessment of water stress in vegetation
-   - Dependency: Requires NIR and SWIR bands
+   - Implementation: `src/metrics/moisture.py`
 
-7. **Leaf Area Index (LAI)**
-   - Algorithms:
-     - Empirical: LAI = f(NDVI)
-     - Physical: LAI = -ln(1-fPAR)/k
-     - ML-based: Regression models using spectral data
+2. **Leaf Area Index (LAI)**
+   - Algorithm: `LAI = 3.618 * EVI - 0.118`
    - Description: Quantifies leaf material in an ecosystem
-   - Dependency: Often derived from NDVI or other vegetation indices
+   - Implementation: `src/metrics/vegetation.py`
 
-## Implementation Strategy
+## Getting Started
 
-1. Set up environment with necessary Python packages
-2. Download pre-computed LAI products from NASA Earthdata or Copernicus
-3. Acquire Sentinel-2 or Landsat data for MSI calculation
-4. Process and validate the LAI data
-5. Calculate MSI from satellite bands
-6. Optionally compute additional vegetation indices
-7. Perform analysis and visualization
+### Prerequisites
 
-## Software Requirements
+- Python 3.9+
+- UV package manager
 
-- Python libraries:
-  - Data access: pyhdf, netCDF4, sentinelsat, landsatxplore, pystac-client
-  - Processing: rasterio, xarray, rioxarray, numpy, scipy
-  - Analysis: pandas, geopandas
-  - Visualization: matplotlib, folium, seaborn
-  - Notebook: marimo or jupyter
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/brylie/remote-sensing-analysis.git
+   cd remote-sensing-analysis
+   ```
+
+2. Set up a virtual environment and install dependencies:
+   ```bash
+   uv venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   uv pip install -e .
+   ```
+
+3. Set up Earth Engine authentication (if not previously done):
+   ```bash
+   earthengine authenticate
+   ```
+
+### Usage
+
+#### Running the Pipeline
+
+The main pipeline can be run with:
+
+```bash
+python scripts/run_pipeline.py
+```
+
+Optional arguments:
+- `--config PATH`: Path to config file (default: `config/pipeline.yaml`)
+- `--area NAME`: Area of interest (overrides config)
+- `--start-date DATE`: Start date (YYYY-MM-DD, overrides config)
+- `--log-level LEVEL`: Logging level (default: INFO)
+
+#### Configuration
+
+Edit `config/pipeline.yaml` to customize pipeline settings:
+
+```yaml
+# Area of interest
+area: "finland"
+
+# Time range for data extraction
+start_date: "2024-04-01"  # Format: YYYY-MM-DD
+end_date: "2024-04-30"    # Format: YYYY-MM-DD
+
+# Metrics to calculate
+metrics:
+  - "EVI"
+  - "LAI"
+  - "MSI"
+```
+
+#### Running the Notebooks
+
+The project includes Jupyter notebooks for interactive analysis:
+
+1. Start Jupyter:
+   ```bash
+   jupyter lab
+   ```
+
+2. Navigate to `notebooks/` and open the desired notebook.
+
+## Development
+
+### Adding New Areas
+
+To add new geographic areas for analysis, edit `config/areas.py`:
+
+```python
+AREAS: Dict[str, ee.Geometry] = {
+    "finland": ee.FeatureCollection("FAO/GAUL/2015/level0")
+        .filter(ee.Filter.eq("ADM0_NAME", "Finland"))
+        .geometry(),
+    "your_new_area": ee.Geometry.Rectangle([lon1, lat1, lon2, lat2])
+}
+```
+
+### Adding New Metrics
+
+To add a new vegetation or moisture index:
+
+1. Add the calculation function to the appropriate module in `src/metrics/`
+2. Update the pipeline to include the new metric in `src/pipeline/runner.py`
+3. Add the metric name to your `config/pipeline.yaml`
+
+## License
+
+This project is licensed under the [Apache License Version 2.0](LICENSE).
