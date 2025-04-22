@@ -71,3 +71,11 @@ For tuples of variable size, we use one type and ellipsis
 ```python
 x: tuple[int, ...] = (1, 2, 3)  # Python 3.9+
 ```
+
+## Mypy
+
+We use `mypy` for type checking. You can run `mypy` on the codebase using the following command:
+
+```bash
+uv run mypy .
+```
