@@ -11,10 +11,12 @@ dependencies = [
     "jupyterlab>=4.4.0",
     "matplotlib>=3.10.1",
     "pandas>=2.2.3",
+    "pyyaml>=6.0.2",
     "rasterio>=1.4.3",
     "scipy>=1.15.2",
     "seaborn>=0.13.2",
     "tqdm>=4.67.1",
+    "typer>=0.15.2",
 ]
 
 [dependency-groups]
