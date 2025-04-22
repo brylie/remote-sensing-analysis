@@ -1,9 +1,12 @@
+import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import ee
+import httpx
+from tqdm import tqdm
 
 from src.extractors.sentinel import get_sentinel_data
 from src.metrics.moisture import calculate_msi
@@ -107,85 +110,199 @@ class Pipeline:
 
     def _save_results(self, processed_data: ee.Image) -> None:
         """
-        Save results to specified output locations.
+        Save results to specified output locations as GeoTIFF files.
 
         Args:
             processed_data: Processed image with calculated metrics
         """
         # Get output configuration
         output_config = self.config.get("output", {})
-        output_format = output_config.get("format", "GeoTIFF")
         output_dir = output_config.get("directory", "data/output")
-        output_prefix = output_config.get("prefix", "rs_metrics_")
 
         # Create output directory if it doesn't exist
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
 
-        # Get area name and dates for naming
-        area_name = self.config.get("area", "finland")
-        start_date = self.config.get("start_date", datetime.now().strftime("%Y-%m-01"))
-        if isinstance(start_date, ee.Date):
-            start_date = start_date.format("YYYY-MM-dd").getInfo()
-
-        # Format filename: prefix_area_date
-        timestamp = start_date.replace("-", "")
-        filename = f"{output_prefix}{area_name}_{timestamp}"
+        # Prepare base file information
+        file_info = self._prepare_file_info()
 
         # Get metrics to save
         metrics = self.config.get("metrics", ["EVI", "LAI", "MSI"])
 
-        # Set up the export region (from the area or from config)
-        try:
-            from config.areas import get_area
+        # Get area geometry for export
+        region = self._get_export_region(file_info["area_name"])
 
-            region = get_area(area_name).geometry().bounds().getInfo()["coordinates"]
-        except Exception:
-            # Default to a region from config or Finland bounding box if not available
-            region = self.config.get("region")
-
-        # Set up export for each metric band
+        # Download and save each metric
+        saved_files: list[str] = []
         for metric in metrics:
             if (
                 processed_data.bandNames().getInfo()
                 and metric in processed_data.bandNames().getInfo()
             ):
-                # Create the full path for the output file
-                full_path = output_path / f"{filename}_{metric}.tif"
-
-                self.logger.info(f"Exporting {metric} to: {full_path}")
-
-                # Set up Earth Engine export task
-                export_task = ee.batch.Export.image.toDrive(
-                    image=processed_data.select(metric),
-                    description=f"{filename}_{metric}",
-                    folder=output_dir,
-                    fileNamePrefix=f"{filename}_{metric}",
+                output_file = self._save_metric_geotiff(
+                    metric=metric,
+                    image=processed_data,
+                    output_path=output_path,
+                    file_info=file_info,
                     region=region,
-                    scale=10,  # 10m resolution for Sentinel-2
-                    fileFormat=output_format,
-                    maxPixels=1e13,
                 )
-
-                # Start the export task
-                export_task.start()
-                self.logger.info(f"Started export task for {metric}")
-
-                # Store task in results for tracking
-                if "export_tasks" not in self.results:
-                    self.results["export_tasks"] = []
-                self.results["export_tasks"].append(export_task)
+                if output_file:
+                    saved_files.append(str(output_file.name))
             else:
                 self.logger.warning(f"Metric {metric} not found in processed data")
 
-        # Also save metadata about the processing
-        metadata = {
-            "area": area_name,
+        # Save metadata
+        self._save_metadata(output_path, file_info, metrics, saved_files)
+
+        self.logger.info(f"Results processing complete, files saved to {output_dir}")
+
+    def _prepare_file_info(self) -> dict[str, str]:
+        """
+        Prepare base file information for output files.
+
+        Returns:
+            Dictionary containing file naming information
+        """
+        output_config = self.config.get("output", {})
+        output_prefix = output_config.get("prefix", "rs_metrics_")
+
+        # Get area name and dates for naming
+        area_name = self.config.get("area", "finland")
+        start_date = self.config.get("start_date", datetime.now().strftime("%Y-%m-01"))
+
+        if isinstance(start_date, ee.Date):
+            start_date = start_date.format("YYYY-MM-dd").getInfo()
+
+        # Format filename: prefix_area_date
+        timestamp = start_date.replace("-", "")
+        filename_base = f"{output_prefix}{area_name}_{timestamp}"
+
+        return {
+            "area_name": area_name,
             "start_date": start_date,
+            "filename_base": filename_base,
+        }
+
+    def _get_export_region(self, area_name: str) -> list:
+        """
+        Get the region coordinates for export.
+
+        Args:
+            area_name: Name of the area to export
+
+        Returns:
+            List of coordinates defining the region bounds
+        """
+        from config.areas import get_area
+
+        area = get_area(area_name)
+        return area.bounds().getInfo()["coordinates"]
+
+    def _save_metric_geotiff(
+        self,
+        metric: str,
+        image: ee.Image,
+        output_path: Path,
+        file_info: dict[str, str],
+        region: list,
+    ) -> Optional[Path]:
+        """
+        Download and save a single metric as a GeoTIFF file.
+
+        Args:
+            metric: Name of the metric to save
+            image: Earth Engine image containing the metric
+            output_path: Directory to save the file
+            file_info: Dictionary with file naming information
+            region: Coordinates defining the export region
+
+        Returns:
+            Path to the saved file, or None if saving failed
+        """
+        output_file = output_path / f"{file_info['filename_base']}_{metric}.tif"
+        self.logger.info(f"Saving {metric} to: {output_file}")
+
+        try:
+            # Set up parameters for the GeoTIFF export
+            params = {
+                "region": region,
+                "dimensions": 1024,  # Limit size for reasonable download
+                "format": "GEO_TIFF",
+                "crs": "EPSG:4326",  # WGS84
+            }
+
+            # Get download URL for this band
+            url = image.select(metric).getDownloadURL(params)
+
+            # Download the GeoTIFF with progress indication
+            self._download_file_with_progress(url, output_file, f"Downloading {metric}")
+
+            self.logger.info(f"Successfully saved {metric} to {output_file}")
+            return output_file
+
+        except Exception as e:
+            self.logger.error(f"Failed to save {metric} to {output_file}: {str(e)}")
+            return None
+
+    def _download_file_with_progress(
+        self, url: str, output_file: Path, desc: str
+    ) -> None:
+        """
+        Download a file with progress indication.
+
+        Args:
+            url: URL to download from
+            output_file: Path where the file should be saved
+            desc: Description for the progress bar
+        """
+        with httpx.stream("GET", url, timeout=300) as response:
+            response.raise_for_status()
+
+            # Get total size if available
+            total_size = int(response.headers.get("Content-Length", 0))
+
+            # Set up progress bar
+            with tqdm(
+                total=total_size, unit="B", unit_scale=True, desc=desc, leave=True
+            ) as progress_bar:
+                with open(output_file, "wb") as f:
+                    for chunk in response.iter_bytes(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                            progress_bar.update(len(chunk))
+
+    def _save_metadata(
+        self,
+        output_path: Path,
+        file_info: dict[str, str],
+        metrics: list[str],
+        saved_files: list[str],
+    ) -> None:
+        """
+        Save metadata about the processing run.
+
+        Args:
+            output_path: Directory where metadata should be saved
+            file_info: Dictionary with file naming information
+            metrics: List of metrics that were processed
+            saved_files: List of files that were successfully saved
+        """
+        metadata_file = output_path / f"{file_info['filename_base']}_metadata.json"
+
+        metadata = {
+            "area": file_info["area_name"],
+            "start_date": file_info["start_date"],
             "end_date": self.config.get("end_date"),
             "metrics": metrics,
+            "files_saved": saved_files,
             "timestamp": datetime.now().isoformat(),
         }
 
         self.results["metadata"] = metadata
-        self.logger.info("Results processing complete, metadata stored")
+
+        try:
+            with open(metadata_file, "w") as f:
+                json.dump(metadata, f, indent=2)
+            self.logger.info(f"Saved processing metadata to {metadata_file}")
+        except Exception as e:
+            self.logger.error(f"Failed to save metadata: {str(e)}")
