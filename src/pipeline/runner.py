@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import ee
 import httpx
@@ -12,6 +12,7 @@ from src.extractors.sentinel import get_sentinel_data
 from src.metrics.moisture import calculate_msi
 from src.metrics.vegetation import calculate_evi, calculate_lai
 from src.processors.preprocessing import add_date
+from src.statistics.distribution import VegetationIndexAnalyzer
 
 
 class Pipeline:
@@ -47,7 +48,12 @@ class Pipeline:
 
             # Save results
             self.logger.info("Saving results")
-            self._save_results(processed_data)
+            saved_files = self._save_results(processed_data)
+
+            # Generate statistics if enabled
+            if self.config.get("statistics", {}).get("enabled", False):
+                self.logger.info("Generating statistics")
+                self._generate_statistics(saved_files)
 
             return self.results
 
@@ -108,12 +114,15 @@ class Pipeline:
         self.results["composite"] = composite
         return composite
 
-    def _save_results(self, processed_data: ee.Image) -> None:
+    def _save_results(self, processed_data: ee.Image) -> dict[str, Path]:
         """
         Save results to specified output locations as GeoTIFF files.
 
         Args:
             processed_data: Processed image with calculated metrics
+
+        Returns:
+            Dictionary mapping metric names to saved file paths
         """
         # Get output configuration
         output_config = self.config.get("output", {})
@@ -133,12 +142,14 @@ class Pipeline:
         region = self._get_export_region(file_info["area_name"])
 
         # Download and save each metric
-        saved_files: list[str] = []
+        saved_files: dict[str, Path] = {}
+        saved_file_names: list[str] = []
+
+        # Get band names once to avoid repeated calls
+        band_names_info = processed_data.bandNames().getInfo()
+
         for metric in metrics:
-            if (
-                processed_data.bandNames().getInfo()
-                and metric in processed_data.bandNames().getInfo()
-            ):
+            if band_names_info is not None and metric in band_names_info:
                 output_file = self._save_metric_geotiff(
                     metric=metric,
                     image=processed_data,
@@ -147,14 +158,17 @@ class Pipeline:
                     region=region,
                 )
                 if output_file:
-                    saved_files.append(str(output_file.name))
+                    saved_files[metric] = output_file
+                    saved_file_names.append(str(output_file.name))
             else:
                 self.logger.warning(f"Metric {metric} not found in processed data")
 
         # Save metadata
-        self._save_metadata(output_path, file_info, metrics, saved_files)
+        self._save_metadata(output_path, file_info, metrics, saved_file_names)
 
         self.logger.info(f"Results processing complete, files saved to {output_dir}")
+
+        return saved_files
 
     def _prepare_file_info(self) -> dict[str, str]:
         """
@@ -196,7 +210,15 @@ class Pipeline:
         from config.areas import get_area
 
         area = get_area(area_name)
-        return area.bounds().getInfo()["coordinates"]
+        bounds_info = area.bounds().getInfo()
+
+        if bounds_info is None:
+            self.logger.warning(
+                f"Could not get region bounds for {area_name}, using empty coordinates",
+            )
+            return []
+
+        return bounds_info["coordinates"]
 
     def _save_metric_geotiff(
         self,
@@ -205,7 +227,7 @@ class Pipeline:
         output_path: Path,
         file_info: dict[str, str],
         region: list,
-    ) -> Optional[Path]:
+    ) -> Path | None:
         """
         Download and save a single metric as a GeoTIFF file.
 
@@ -245,7 +267,10 @@ class Pipeline:
             return None
 
     def _download_file_with_progress(
-        self, url: str, output_file: Path, desc: str
+        self,
+        url: str,
+        output_file: Path,
+        desc: str,
     ) -> None:
         """
         Download a file with progress indication.
@@ -263,7 +288,11 @@ class Pipeline:
 
             # Set up progress bar
             with tqdm(
-                total=total_size, unit="B", unit_scale=True, desc=desc, leave=True
+                total=total_size,
+                unit="B",
+                unit_scale=True,
+                desc=desc,
+                leave=True,
             ) as progress_bar:
                 with open(output_file, "wb") as f:
                     for chunk in response.iter_bytes(chunk_size=8192):
@@ -306,3 +335,50 @@ class Pipeline:
             self.logger.info(f"Saved processing metadata to {metadata_file}")
         except Exception as e:
             self.logger.error(f"Failed to save metadata: {str(e)}")
+
+    def _generate_statistics(self, saved_files: dict[str, Path]) -> None:
+        """
+        Generate statistical analysis for the saved GeoTIFF files.
+
+        Args:
+            saved_files: Dictionary mapping metric names to saved file paths
+        """
+        stats_config = self.config.get("statistics", {})
+
+        # Skip if no files were saved
+        if not saved_files:
+            self.logger.warning("No files available for statistical analysis")
+            return
+
+        # Create output directory for statistics
+        stats_output_dir = stats_config.get(
+            "output_directory",
+            "data/output/statistics",
+        )
+        stats_output_path = Path(stats_output_dir)
+        stats_output_path.mkdir(parents=True, exist_ok=True)
+
+        # Initialize analyzer
+        self.logger.info(
+            f"Initializing statistical analysis, outputs will be saved to {stats_output_dir}",
+        )
+        analyzer = VegetationIndexAnalyzer(stats_output_dir)
+
+        # Analyze individual indices
+        individual_stats = {}
+        for metric, file_path in saved_files.items():
+            self.logger.info(f"Analyzing {metric} index distribution")
+            stats = analyzer.analyze_index(str(file_path))
+            individual_stats[metric] = stats
+
+        # Generate comparison if multiple indices are available
+        if len(saved_files) > 1:
+            self.logger.info("Generating index comparison")
+            geotiff_paths = {metric: str(path) for metric, path in saved_files.items()}
+            comparison_stats = analyzer.compare_indices(geotiff_paths)
+
+            # Store comparison results
+            self.results["index_comparison"] = comparison_stats.to_dict()
+
+        # Store individual statistics
+        self.results["index_statistics"] = individual_stats

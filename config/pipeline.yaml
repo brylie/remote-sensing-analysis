@@ -30,3 +30,11 @@ output:
 processing:
   composite_method: "median" # Options: median, mean, mosaic
   resampling: "bilinear" # Options: bilinear, nearest, cubic
+
+# Statistical analysis configuration
+statistics:
+  enabled: true
+  output_directory: "data/output/statistics"
+  normality_tests: true
+  visualization: true
+  sample_size: 5000 # Max sample size for statistical tests

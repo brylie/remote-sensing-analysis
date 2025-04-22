@@ -9,13 +9,20 @@ dependencies = [
     "geemap>=0.35.3",
     "httpx>=0.28.1",
     "jupyterlab>=4.4.0",
+    "matplotlib>=3.10.1",
+    "pandas>=2.2.3",
     "rasterio>=1.4.3",
+    "scipy>=1.15.2",
+    "seaborn>=0.13.2",
     "tqdm>=4.67.1",
 ]
 
 [dependency-groups]
 dev = [
     "mypy>=1.15.0",
+    "pandas-stubs>=2.2.3.250308",
     "pre-commit>=4.2.0",
     "types-pyyaml>=6.0.12.20250402",
+    "types-seaborn>=0.13.2.20250111",
+    "types-tqdm>=4.67.0.20250417",
 ]
