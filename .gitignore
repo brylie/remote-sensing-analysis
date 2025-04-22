@@ -172,3 +172,31 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Remote sensing data files
+# --------------------------
+# Raw data downloads
+data/raw/
+
+# Processed data files
+data/processed/
+
+# Output data files and geospatial products
+data/output/
+
+# Large data formats
+*.tif
+*.tiff
+*.geotiff
+*.hdf
+*.nc
+*.h5
+
+# Temporary project files
+.earth-engine-temp/
+
+# Downloaded cloud data cache
+.ee_cache/
+
+# Earth Engine authentication tokens
+.ee-token

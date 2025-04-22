@@ -8,13 +8,14 @@ import logging
 import os
 import sys
 
-import yaml
-
-from src.pipeline.runner import Pipeline
-
 # Add the project root to Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
+
+import yaml  # noqa: E402
+
+# Import runner after adding project root to path to avoid import errors
+from src.pipeline.runner import Pipeline  # noqa: E402
 
 
 def setup_logging(log_level: str) -> None:
