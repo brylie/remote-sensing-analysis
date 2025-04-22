@@ -58,7 +58,7 @@ class Pipeline:
             Image collection from Sentinel data
         """
         start_date = self.config.get("start_date") or ee.Date(
-            datetime.now().strftime("%Y-%m-01")
+            datetime.now().strftime("%Y-%m-01"),
         )
         end_date = self.config.get("end_date") or start_date.advance(1, "month")
         area_name = self.config.get("area", "finland")

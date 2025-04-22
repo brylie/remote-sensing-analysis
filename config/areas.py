@@ -24,6 +24,6 @@ def get_area(name: str) -> ee.Geometry:
     """
     if name not in AREAS:
         raise ValueError(
-            f"Area '{name}' not found. Available areas: {list(AREAS.keys())}"
+            f"Area '{name}' not found. Available areas: {list(AREAS.keys())}",
         )
     return AREAS[name]

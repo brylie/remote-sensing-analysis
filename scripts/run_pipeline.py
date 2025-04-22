@@ -28,21 +28,26 @@ def setup_logging(log_level: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run geospatial metrics pipeline")
     parser.add_argument(
-        "--config", default="config/pipeline.yaml", help="Path to config file"
+        "--config",
+        default="config/pipeline.yaml",
+        help="Path to config file",
     )
     parser.add_argument("--area", help="Area of interest (overrides config)")
     parser.add_argument(
-        "--start-date", help="Start date (YYYY-MM-DD, overrides config)"
+        "--start-date",
+        help="Start date (YYYY-MM-DD, overrides config)",
     )
     parser.add_argument(
-        "--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"]
+        "--log-level",
+        default="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
     )
     args = parser.parse_args()
 
     setup_logging(args.log_level)
 
     # Load config
-    with open(args.config, "r") as f:
+    with open(args.config) as f:
         config = yaml.safe_load(f)
 
     # Override with command line args
@@ -53,7 +58,7 @@ def main() -> None:
 
     # Run pipeline
     pipeline = Pipeline(config)
-    results = pipeline.run()
+    _ = pipeline.run()
 
     logging.info("Pipeline completed successfully")
 

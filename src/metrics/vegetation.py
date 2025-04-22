@@ -34,7 +34,8 @@ def calculate_lai(image: ee.Image) -> ee.Image:
         Image with LAI band added
     """
     lai = image.expression(
-        "(3.618 * EVI - 0.118)", {"EVI": image.select("EVI")}
+        "(3.618 * EVI - 0.118)",
+        {"EVI": image.select("EVI")},
     ).rename("LAI")
 
     return image.addBands(lai)

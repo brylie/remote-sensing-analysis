@@ -37,4 +37,3 @@ x: tuple[int, str, float] = (3, "yes", 7.5)  # Python 3.9+
 
 For tuples of variable size, we use one type and ellipsis
 x: tuple[int, ...] = (1, 2, 3)  # Python 3.9+
-
