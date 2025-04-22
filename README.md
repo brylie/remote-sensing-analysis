@@ -1,6 +1,6 @@
 # Remote Sensing Analysis
 
-Geospatial analysis of remote sensing data focused on vegetation and moisture metrics.
+A Python pipeline for analyzing remote sensing data using Google Earth Engine.
 
 ## Project Goals
 
@@ -98,6 +98,104 @@ The core focus of the project:
    - Algorithm: `LAI = 3.618 * EVI - 0.118`
    - Description: Quantifies leaf material in an ecosystem
    - Implementation: `src/metrics/vegetation.py`
+
+## Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/remote-sensing-analysis.git
+cd remote-sensing-analysis
+
+# Set up environment
+uv create
+uv pip install -e .
+```
+
+## Features
+
+- Extract data from Google Earth Engine
+- Calculate vegetation indices (EVI, LAI, MSI)
+- Generate statistical analysis of vegetation indices
+- Export results as GeoTIFF files
+
+## Usage
+
+The remote sensing analysis pipeline now supports modular execution, allowing you to run specific parts of the pipeline independently.
+
+### Command Line Interface
+
+```bash
+# Show help and available commands
+python scripts/run_pipeline.py --help
+
+# Run the full pipeline
+python scripts/run_pipeline.py full --config config/pipeline.yaml
+
+# Only extract and process data (skip statistics)
+python scripts/run_pipeline.py extract --area finland --start-date 2024-04-01
+
+# Generate statistics from existing GeoTIFF files
+python scripts/run_pipeline.py statistics --input-dir data/output --output-dir data/output/statistics
+```
+
+### Command options
+
+#### Common options
+
+All commands support the following options:
+
+- `--config`, `-c`: Path to the configuration file (default: `config/pipeline.yaml`)
+- `--log-level`, `-l`: Log level (DEBUG, INFO, WARNING, ERROR)
+
+#### Full pipeline
+
+```bash
+python scripts/run_pipeline.py full [OPTIONS]
+```
+
+Options:
+- `--area`, `-a`: Area of interest (overrides config)
+- `--start-date`, `-s`: Start date (YYYY-MM-DD, overrides config)
+
+#### Extract data
+
+```bash
+python scripts/run_pipeline.py extract [OPTIONS]
+```
+
+Options:
+- `--area`, `-a`: Area of interest (overrides config)
+- `--start-date`, `-s`: Start date (YYYY-MM-DD, overrides config)
+
+#### Generate statistics
+
+```bash
+python scripts/run_pipeline.py statistics [OPTIONS]
+```
+
+Options:
+- `--input-dir`, `-i`: Directory containing GeoTIFF files
+- `--output-dir`, `-o`: Directory to save statistics
+- `--pattern`, `-p`: Glob pattern to match GeoTIFF files (default: `*.tif`)
+
+## Configuration
+
+The pipeline is configured through a YAML file. Example configuration:
+
+```yaml
+area: finland
+start_date: 2024-04-01
+metrics:
+  - EVI
+  - LAI
+  - MSI
+output:
+  directory: data/output
+  prefix: rs_metrics_
+statistics:
+  enabled: true
+  output_directory: data/output/statistics
+```
 
 ## Getting Started
 
