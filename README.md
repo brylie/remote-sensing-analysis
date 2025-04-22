@@ -1,12 +1,25 @@
 # Remote Sensing Analysis
 
-A Python pipeline for analyzing remote sensing data using Google Earth Engine.
+A Python pipeline for analyzing remote sensing data using Google Earth Engine, focusing on vegetation and moisture indices.
+
+## Key Features
+
+- **Satellite Data Extraction**: Seamless integration with Google Earth Engine for acquiring Sentinel data
+- **Vegetation Indices**: Implementation of multiple vegetation indices (EVI, LAI)
+- **Moisture Analysis**: Calculation of Moisture Stress Index (MSI) for water stress assessment
+- **Statistical Analysis**: Distribution analysis and comparison between different indices
+- **Modular CLI**: Typer-based command-line interface for running separate pipeline steps
+- **Resource Optimization**: Run specific pipeline stages independently to save computational resources
+- **Geospatial Processing**: GeoTIFF output with proper coordinate systems and metadata
+- **Visualization**: Generate plots and maps for data interpretation
+- **Type Safety**: Comprehensive Python type annotations with mypy validation
 
 ## Project Goals
 
 The primary objectives of this project are to:
 - Derive or obtain Moisture Stress Index (MSI)
 - Derive or obtain Leaf Area Index (LAI)
+- Provide statistical analysis of vegetation and moisture indices
 
 ## Project Structure
 
@@ -20,6 +33,7 @@ remote-sensing-analysis/
 │   └── settings.py        # General settings
 ├── data/                  # Data storage
 │   ├── output/            # Generated output files
+│   │   └── statistics/    # Statistical analysis results
 │   ├── processed/         # Intermediate processed data
 │   └── raw/               # Raw input data
 ├── docs/                  # Documentation
@@ -27,7 +41,7 @@ remote-sensing-analysis/
 ├── notebooks/             # Jupyter notebooks for analysis
 │   └── lai_finland.ipynb  # Finland LAI/MSI analysis example
 ├── scripts/               # Executable scripts
-│   └── run_pipeline.py    # Main pipeline runner
+│   └── run_pipeline.py    # Modular CLI pipeline runner
 └── src/                   # Source code
     ├── extractors/        # Data extraction modules
     │   └── sentinel.py    # Sentinel imagery extraction
@@ -38,6 +52,8 @@ remote-sensing-analysis/
     │   └── runner.py      # Pipeline orchestration
     ├── processors/        # Data processing modules
     │   └── preprocessing.py # Common preprocessing functions
+    ├── statistics/        # Statistical analysis
+    │   └── distribution.py # Index distribution analysis
     └── visualization/     # Visualization utilities
         └── maps.py        # Map generation helpers
 ```
@@ -101,6 +117,13 @@ The core focus of the project:
 
 ## Installation
 
+### Prerequisites
+
+- Python 3.12+
+- UV package manager
+
+### Setup
+
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/remote-sensing-analysis.git
@@ -108,21 +131,36 @@ cd remote-sensing-analysis
 
 # Set up environment
 uv create
+uv install
+
+# Install the package in development mode
 uv pip install -e .
+
+# Set up Earth Engine authentication (if not previously done)
+earthengine authenticate
 ```
-
-## Features
-
-- Extract data from Google Earth Engine
-- Calculate vegetation indices (EVI, LAI, MSI)
-- Generate statistical analysis of vegetation indices
-- Export results as GeoTIFF files
 
 ## Usage
 
-The remote sensing analysis pipeline now supports modular execution, allowing you to run specific parts of the pipeline independently.
+The remote sensing analysis pipeline supports modular execution, allowing you to run specific parts of the pipeline independently to save computational resources.
+
+### JupyterLab Environment
+
+The project includes Jupyter notebooks for interactive analysis and visualization:
+
+```bash
+# Start JupyterLab
+uv run jupyter lab
+```
+
+This will open JupyterLab in your browser, where you can access:
+
+- `notebooks/lai_finland.ipynb`: Example notebook for analyzing LAI and MSI for Finland
+- Create new notebooks to explore other regions or indices
 
 ### Command Line Interface
+
+The CLI uses Typer to provide a structured and user-friendly interface with multiple commands:
 
 ```bash
 # Show help and available commands
@@ -138,16 +176,16 @@ python scripts/run_pipeline.py extract --area finland --start-date 2024-04-01
 python scripts/run_pipeline.py statistics --input-dir data/output --output-dir data/output/statistics
 ```
 
-### Command options
+### Command Options
 
-#### Common options
+#### Common Options
 
 All commands support the following options:
 
 - `--config`, `-c`: Path to the configuration file (default: `config/pipeline.yaml`)
 - `--log-level`, `-l`: Log level (DEBUG, INFO, WARNING, ERROR)
 
-#### Full pipeline
+#### Full Pipeline Command
 
 ```bash
 python scripts/run_pipeline.py full [OPTIONS]
@@ -157,7 +195,7 @@ Options:
 - `--area`, `-a`: Area of interest (overrides config)
 - `--start-date`, `-s`: Start date (YYYY-MM-DD, overrides config)
 
-#### Extract data
+#### Extract Data Command
 
 ```bash
 python scripts/run_pipeline.py extract [OPTIONS]
@@ -167,7 +205,7 @@ Options:
 - `--area`, `-a`: Area of interest (overrides config)
 - `--start-date`, `-s`: Start date (YYYY-MM-DD, overrides config)
 
-#### Generate statistics
+#### Generate Statistics Command
 
 ```bash
 python scripts/run_pipeline.py statistics [OPTIONS]
@@ -183,92 +221,29 @@ Options:
 The pipeline is configured through a YAML file. Example configuration:
 
 ```yaml
-area: finland
-start_date: 2024-04-01
-metrics:
-  - EVI
-  - LAI
-  - MSI
-output:
-  directory: data/output
-  prefix: rs_metrics_
-statistics:
-  enabled: true
-  output_directory: data/output/statistics
-```
-
-## Getting Started
-
-### Prerequisites
-
-- Python 3.9+
-- UV package manager
-
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/brylie/remote-sensing-analysis.git
-   cd remote-sensing-analysis
-   ```
-
-2. Set up a virtual environment and install dependencies:
-   ```bash
-   uv venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   uv pip install -e .
-   ```
-
-3. Set up Earth Engine authentication (if not previously done):
-   ```bash
-   earthengine authenticate
-   ```
-
-### Usage
-
-#### Running the Pipeline
-
-The main pipeline can be run with:
-
-```bash
-python scripts/run_pipeline.py
-```
-
-Optional arguments:
-- `--config PATH`: Path to config file (default: `config/pipeline.yaml`)
-- `--area NAME`: Area of interest (overrides config)
-- `--start-date DATE`: Start date (YYYY-MM-DD, overrides config)
-- `--log-level LEVEL`: Logging level (default: INFO)
-
-#### Configuration
-
-Edit `config/pipeline.yaml` to customize pipeline settings:
-
-```yaml
 # Area of interest
 area: "finland"
 
 # Time range for data extraction
-start_date: "2024-04-01"  # Format: YYYY-MM-DD
-end_date: "2024-04-30"    # Format: YYYY-MM-DD
+start_date: "2024-04-01"
+end_date: "2024-04-30"
 
 # Metrics to calculate
 metrics:
   - "EVI"
   - "LAI"
   - "MSI"
+
+# Output settings
+output:
+  directory: "data/output"
+  prefix: "rs_metrics_"
+
+# Statistics settings
+statistics:
+  enabled: true
+  output_directory: "data/output/statistics"
 ```
-
-#### Running the Notebooks
-
-The project includes Jupyter notebooks for interactive analysis:
-
-1. Start Jupyter:
-   ```bash
-   jupyter lab
-   ```
-
-2. Navigate to `notebooks/` and open the desired notebook.
 
 ## Development
 
@@ -277,7 +252,7 @@ The project includes Jupyter notebooks for interactive analysis:
 To add new geographic areas for analysis, edit `config/areas.py`:
 
 ```python
-AREAS: Dict[str, ee.Geometry] = {
+AREAS: dict[str, ee.Geometry] = {
     "finland": ee.FeatureCollection("FAO/GAUL/2015/level0")
         .filter(ee.Filter.eq("ADM0_NAME", "Finland"))
         .geometry(),
@@ -292,6 +267,36 @@ To add a new vegetation or moisture index:
 1. Add the calculation function to the appropriate module in `src/metrics/`
 2. Update the pipeline to include the new metric in `src/pipeline/runner.py`
 3. Add the metric name to your `config/pipeline.yaml`
+
+### Running Type Checks
+
+We use `mypy` for static type checking:
+
+```bash
+# Check the entire codebase
+uv run mypy .
+
+# Check a specific file
+uv run mypy src/pipeline/runner.py
+```
+
+## Output Files
+
+The pipeline generates several types of output files:
+
+1. **GeoTIFF Files**: Raster files for each calculated index
+   - Location: `data/output/rs_metrics_{area}_{date}_{metric}.tif`
+   - Example: `data/output/rs_metrics_finland_20240401_EVI.tif`
+
+2. **Metadata**: JSON file with processing details
+   - Location: `data/output/rs_metrics_{area}_{date}_metadata.json`
+
+3. **Statistics Files**: CSV files with statistical analysis
+   - Location: `data/output/statistics/rs_metrics_{area}_{date}_{metric}_statistics.csv`
+
+4. **Visualization Files**: PNG files with distribution plots
+   - Location: `data/output/statistics/rs_metrics_{area}_{date}_{metric}_distribution_analysis.png`
+   - Location: `data/output/statistics/index_comparison.png`
 
 ## License
 
