@@ -5,6 +5,8 @@ def calculate_evi(image: ee.Image) -> ee.Image:
     """
     Calculate Enhanced Vegetation Index (EVI) from Sentinel-2 imagery.
 
+    Original source: https://github.com/krishnakafle/Blog_kaflekrishna/blob/main/GEE/LAI/LAI_calculations.ipynb
+
     Args:
         image: Sentinel-2 image
 
@@ -26,6 +28,8 @@ def calculate_evi(image: ee.Image) -> ee.Image:
 def calculate_lai(image: ee.Image) -> ee.Image:
     """
     Calculate Leaf Area Index (LAI) from the EVI band.
+
+    Original source: https://github.com/krishnakafle/Blog_kaflekrishna/blob/main/GEE/LAI/LAI_calculations.ipynb
 
     Args:
         image: Image containing EVI band
