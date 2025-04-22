@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 import ee
 
@@ -10,7 +10,7 @@ from src.processors.preprocessing import add_date
 
 
 class Pipeline:
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Initialize pipeline with configuration.
 
@@ -19,9 +19,9 @@ class Pipeline:
         """
         self.config = config
         self.logger = logging.getLogger("geospatial_pipeline")
-        self.results = {}
+        self.results: dict[str, Any] = {}
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """
         Run the complete pipeline.
 
@@ -50,8 +50,13 @@ class Pipeline:
             self.logger.error(f"Pipeline failed: {e}")
             raise
 
-    def _extract_data(self):
-        """Extract raw data."""
+    def _extract_data(self) -> ee.ImageCollection:
+        """
+        Extract raw data.
+
+        Returns:
+            Image collection from Sentinel data
+        """
         start_date = self.config.get("start_date") or ee.Date(
             datetime.now().strftime("%Y-%m-01")
         )
@@ -64,8 +69,16 @@ class Pipeline:
 
         return get_sentinel_data(start_date, end_date, area)
 
-    def _calculate_metrics(self, data):
-        """Calculate all configured metrics."""
+    def _calculate_metrics(self, data: ee.ImageCollection) -> ee.Image:
+        """
+        Calculate all configured metrics.
+
+        Args:
+            data: Collection of satellite images
+
+        Returns:
+            Composite image with calculated metrics
+        """
         metrics = self.config.get("metrics", ["EVI", "LAI"])
 
         # Apply EVI calculation to all images
@@ -86,7 +99,12 @@ class Pipeline:
         self.results["composite"] = composite
         return composite
 
-    def _save_results(self, processed_data):
-        """Save results to specified output locations."""
+    def _save_results(self, processed_data: ee.Image) -> None:
+        """
+        Save results to specified output locations.
+
+        Args:
+            processed_data: Processed image with calculated metrics
+        """
         # Implementation depends on your needs
         pass

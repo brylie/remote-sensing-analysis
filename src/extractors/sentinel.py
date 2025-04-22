@@ -1,14 +1,18 @@
 import ee
 
 
-def get_sentinel_data(start_date, end_date, area):
+def get_sentinel_data(
+    start_date: ee.Date,
+    end_date: ee.Date,
+    area: ee.Geometry,
+) -> ee.ImageCollection:
     """
     Extract Sentinel-2 data for the specified time range and area.
 
     Args:
-        start_date (ee.Date): Start date for data collection
-        end_date (ee.Date): End date for data collection
-        area (ee.Geometry): Area of interest
+        start_date: Start date for data collection
+        end_date: End date for data collection
+        area: Area of interest
 
     Returns:
         ee.ImageCollection: Collection of Sentinel-2 images

@@ -5,13 +5,19 @@ Run the geospatial metrics pipeline.
 
 import argparse
 import logging
+import os
+import sys
 
 import yaml
 
 from src.pipeline.runner import Pipeline
 
+# Add the project root to Python path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, project_root)
 
-def setup_logging(log_level):
+
+def setup_logging(log_level: str) -> None:
     """Configure logging."""
     logging.basicConfig(
         level=getattr(logging, log_level),
@@ -19,7 +25,7 @@ def setup_logging(log_level):
     )
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Run geospatial metrics pipeline")
     parser.add_argument(
         "--config", default="config/pipeline.yaml", help="Path to config file"
