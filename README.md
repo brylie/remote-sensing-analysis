@@ -49,10 +49,24 @@ The pipeline works with the following data sources:
 git clone https://github.com/yourusername/remote-sensing-analysis.git
 cd remote-sensing-analysis
 ```
+
 ```bash
 # Set up environment
 uv venv
-source venv/bin/activate
+```
+
+```bash
+# Activate the environment Mac/Linux
+source .venv/bin/activate
+```
+
+```bash
+# Activate the environment Windows
+.venv\Scripts\activate
+```
+
+```bash
+# Install dependencies
 uv sync
 ```
 
