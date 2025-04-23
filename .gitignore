@@ -200,3 +200,5 @@ data/output/
 
 # Earth Engine authentication tokens
 .ee-token
+
+test_output/
