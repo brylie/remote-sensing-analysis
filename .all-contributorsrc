@@ -1,0 +1,61 @@
+{
+    "files": [
+        "README.md"
+    ],
+    "imageSize": 100,
+    "contributorsPerLine": 7,
+    "contributorsSortAlphabetically": false,
+    "badgeTemplate": "[![All Contributors](https://img.shields.io/badge/all_contributors-<%= contributors.length %>-orange.svg)](#contributors)",
+    "contributorTemplate": "<a href=\"<%= contributor.profile %>\"><img src=\"<%= contributor.avatar_url %>\" width=\"<%= options.imageSize %>px;\" alt=\"<%= contributor.name %>\"/><br /><sub><b><%= contributor.name %></b></sub></a><br /><%= contributions %>",
+    "types": {
+        "code": {
+            "symbol": "💻",
+            "description": "Code",
+            "link": "https://github.com/<owner>/<repo>/commits?author=<login>"
+        },
+        "doc": {
+            "symbol": "📖",
+            "description": "Documentation",
+            "link": "https://github.com/<owner>/<repo>/commits?author=<login>"
+        },
+        "ideas": {
+            "symbol": "🤔",
+            "description": "Ideas, Planning, & Feedback"
+        },
+        "bug": {
+            "symbol": "🐛",
+            "description": "Bug reports",
+            "link": "https://github.com/<owner>/<repo>/issues?q=author%3A<login>"
+        },
+        "test": {
+            "symbol": "⚠️",
+            "description": "Tests"
+        },
+        "review": {
+            "symbol": "👀",
+            "description": "Reviewed Pull Requests"
+        },
+        "data": {
+            "symbol": "🔣",
+            "description": "Data"
+        }
+    },
+    "skipCi": true,
+    "contributors": [
+        {
+            "login": "brylie",
+            "name": "Brylie Christopher Oxley",
+            "avatar_url": "https://avatars.githubusercontent.com/u/17307?v=4",
+            "profile": "https://github.com/brylie",
+            "contributions": [
+                "code",
+                "doc",
+                "ideas"
+            ]
+        }
+    ],
+    "projectName": "remote-sensing-analysis",
+    "projectOwner": "brylie",
+    "repoType": "github",
+    "repoHost": "https://github.com"
+}
