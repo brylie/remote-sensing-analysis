@@ -178,6 +178,41 @@ statistics:
   output_directory: "data/output/statistics"
 ```
 
+## Testing
+
+The project includes comprehensive unit tests for all modules. Run tests using pytest:
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run tests with verbose output
+uv run pytest -v
+
+# Run tests for a specific module
+uv run pytest tests/processors/
+
+# Run a specific test file
+uv run pytest tests/processors/test_preprocessing.py
+```
+
+### Test Coverage
+
+You can check test coverage using pytest-cov:
+
+```bash
+# Run tests with coverage report
+uv run pytest --cov=src
+
+# Generate HTML coverage report
+uv run pytest --cov=src --cov-report=html
+
+# View coverage for specific modules
+uv run pytest --cov=src.processors --cov=src.statistics
+```
+
+After generating the HTML report, open `htmlcov/index.html` in your browser to view detailed coverage information.
+
 ## Results and Output Files
 
 The pipeline generates the following outputs:
