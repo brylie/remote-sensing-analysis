@@ -175,26 +175,30 @@ class NormalityTester:
         reasons = []
 
         # Interpret Shapiro-Wilk test (p < 0.05 means not normal)
-        if stats_dict["shapiro_p_value"] < 0.05:
+        if "shapiro_p_value" in stats_dict and stats_dict["shapiro_p_value"] < 0.05:
             is_normal = False
             reasons.append(
                 f"Shapiro-Wilk test p-value: {stats_dict['shapiro_p_value']:.6f} < 0.05",
             )
 
         # Interpret D'Agostino's test
-        if stats_dict["dagostino_p_value"] < 0.05:
+        if "dagostino_p_value" in stats_dict and stats_dict["dagostino_p_value"] < 0.05:
             is_normal = False
             reasons.append(
                 f"D'Agostino's test p-value: {stats_dict['dagostino_p_value']:.6f} < 0.05",
             )
 
         # Interpret Anderson-Darling test
-        if stats_dict["anderson_statistic"] > stats_dict["anderson_critical_value"]:
-            is_normal = False
-            reasons.append(
-                f"Anderson-Darling test: {stats_dict['anderson_statistic']:.4f} > "
-                f"{stats_dict['anderson_critical_value']:.4f} (critical value)",
-            )
+        if (
+            "anderson_statistic" in stats_dict
+            and "anderson_critical_value" in stats_dict
+        ):
+            if stats_dict["anderson_statistic"] > stats_dict["anderson_critical_value"]:
+                is_normal = False
+                reasons.append(
+                    f"Anderson-Darling test: {stats_dict['anderson_statistic']:.4f} > "
+                    f"{stats_dict['anderson_critical_value']:.4f} (critical value)",
+                )
 
         # Interpret skewness
         if "skewness" in stats_dict and abs(stats_dict["skewness"]) > 0.5:
@@ -209,6 +213,41 @@ class NormalityTester:
 
 class GeospatialVisualizer:
     """Generate visualizations for geospatial data distribution analysis."""
+
+    @staticmethod
+    def _format_title(file_path: str) -> str:
+        """
+        Format a file path for use in visualization titles.
+
+        Args:
+            file_path: Path to the file
+
+        Returns:
+            Formatted title string
+        """
+        from pathlib import Path
+
+        base_name = Path(file_path).stem
+        return " ".join(base_name.split("_")).title() + " Distribution"
+
+    @staticmethod
+    def _create_plot_grid(
+        rows: int,
+        cols: int,
+        figsize: tuple[float, float] = (15, 12),
+    ) -> tuple[plt.Figure, plt.Axes]:
+        """
+        Create a matplotlib plot grid with the given dimensions.
+
+        Args:
+            rows: Number of rows
+            cols: Number of columns
+            figsize: Figure size tuple (width, height)
+
+        Returns:
+            Tuple of (figure, axes)
+        """
+        return plt.subplots(rows, cols, figsize=figsize)
 
     @staticmethod
     def create_distribution_plots(
@@ -347,6 +386,31 @@ class VegetationIndexAnalyzer:
         self.stats_calculator = StatisticsCalculator()
         self.normality_tester = NormalityTester()
         self.visualizer = GeospatialVisualizer()
+
+    @staticmethod
+    def _extract_index_name(file_path: str) -> str:
+        """
+        Extract the vegetation index name from a file path.
+
+        Args:
+            file_path: Path to the file
+
+        Returns:
+            The extracted vegetation index name
+        """
+        from pathlib import Path
+
+        filename = Path(file_path).stem
+
+        # Common vegetation indices to detect in filenames
+        common_indices = ["NDVI", "EVI", "LAI", "MSI", "SAVI", "NDWI"]
+
+        for index in common_indices:
+            if index in filename:
+                return index
+
+        # If no common index found, return the filename
+        return filename
 
     def analyze_index(self, geotiff_path: str) -> dict[str, float]:
         """
@@ -511,9 +575,23 @@ class VegetationIndexAnalyzer:
 
         # Print expected ranges for common indices
         print("\nTypical ranges for vegetation indices:")
-        print("- LAI: 0-8 m²/m² (most natural vegetation: 0.5-5)")
-        print("- EVI: -1 to +1 (healthy vegetation: 0.2-0.8)")
-        print("- MSI: 0.4-2 (lower values indicate less water stress)")
+
+        # For each index in the stats DataFrame, print its typical range if known
+        known_indices = {
+            "LAI": "0-8 m²/m² (most natural vegetation: 0.5-5)",
+            "EVI": "-1 to +1 (healthy vegetation: 0.2-0.8)",
+            "MSI": "0.4-2 (lower values indicate less water stress)",
+            "NDVI": "-1 to +1 (healthy vegetation: 0.2-0.8)",
+            "SAVI": "-1 to +1 (similar to NDVI but soil-adjusted)",
+            "NDWI": "-1 to +1 (higher values indicate more water content)",
+        }
+
+        for index in stats_df.index:
+            if index in known_indices:
+                print(f"- {index}: {known_indices[index]}")
+            else:
+                # Handle custom indices
+                print(f"- {index}: Custom index (no standard range available)")
 
 
 # Example usage:
