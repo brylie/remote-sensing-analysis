@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/brylie/remote-sensing-analysis/graph/badge.svg?token=HN2WAH38B4)](https://codecov.io/gh/brylie/remote-sensing-analysis)
+
 # Remote Sensing Analysis
 
 A Python pipeline for analyzing remote sensing data using Google Earth Engine, focusing on vegetation and moisture indices.
