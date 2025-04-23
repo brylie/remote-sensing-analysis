@@ -1,4 +1,9 @@
 [![codecov](https://codecov.io/gh/brylie/remote-sensing-analysis/graph/badge.svg?token=HN2WAH38B4)](https://codecov.io/gh/brylie/remote-sensing-analysis)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
+[![Contributors](https://img.shields.io/github/contributors/brylie/remote-sensing-analysis)](https://github.com/brylie/remote-sensing-analysis/graphs/contributors)
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg)](#contributors-)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 # Remote Sensing Analysis
 
@@ -249,3 +254,36 @@ For information on contributing to this project, please see [CONTRIBUTING.md](CO
 ## License
 
 This project is licensed under the [Apache License Version 2.0](LICENSE).
+
+## Contributors ✨
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/brylie"><img src="https://avatars.githubusercontent.com/u/17307?v=4" width="100px;" alt="Brylie Christopher Oxley"/><br /><sub><b>Brylie Christopher Oxley</b></sub></a><br /><a href="https://github.com/brylie/remote-sensing-analysis/commits?author=brylie" title="Code">💻</a> <a href="https://github.com/brylie/remote-sensing-analysis/commits?author=brylie" title="Documentation">📖</a> <a href="#ideas-brylie" title="Ideas, Planning, & Feedback">🤔</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind are welcome!
+
+## Code of Conduct
+
+We are committed to fostering an open and welcoming environment. By participating in this project, you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Community Support
+
+- **Issues**: Please use [GitHub Issues](https://github.com/brylie/remote-sensing-analysis/issues) for bug reports, feature requests, and discussions.
+- **Discussions**: For questions and general discussions, use [GitHub Discussions](https://github.com/brylie/remote-sensing-analysis/discussions).
+
+We welcome contributions from developers of all skill levels. If you're new to the project or to remote sensing in general, look for issues labeled `good first issue` to get started.
